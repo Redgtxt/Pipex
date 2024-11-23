@@ -1,4 +1,70 @@
 #include "pipex.h"
+
+int main(void)
+{
+  int fd[2];
+  //fd[0] - read
+  //fd[1] - write
+    if(pipe(fd) == -1)
+      printf("pipe() failed\n");
+
+    int id = fork();
+    if(id == -1)
+      printf("fork() failed\n");
+    if(id == 0)
+      {
+          close(fd[0]);
+          int x;
+          printf("Input a number: ");
+          scanf("%d", &x);
+          if(write(fd[1], &x, sizeof(int)) == -1)
+            printf("write() failed\n");
+          close(fd[1]);
+      }else{
+        close(fd[1]);
+        int y;
+        //Vamos ler
+        if(read(fd[0], &y, sizeof(int)) == -1)
+          printf("read() failed\n");
+        close(fd[0]);
+        printf("Got from the child process %d\n", y);
+      }
+  return 0;
+}
+
+//!getpid,  gettpid functions
+/*
+int main(void)
+{
+  int child = fork();
+  if(child == 0)
+       sleep(1);
+  printf("child = %d,dad = %d\n", getpid(),getppid());
+
+  int res = wait(NULL);
+        if(res == -1)
+          printf("No chielderen to wait for\n");
+        else
+          printf("Child returned = %d\n", res);//Retorna o id do proccesso
+  return 0;
+
+}
+
+int main(int argc, char *argv[])
+{
+  int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  int fd[2];
+
+  if(pipe(fd) == -1)
+   	perror("Pipe Eroor");
+
+  int child = fork();
+  if(child == -1)
+    perror("Child eroor");
+
+  
+}
+
 int main(void)
 {
   int child = fork();
@@ -19,8 +85,9 @@ int main(void)
       }
       if (child != 0)//Nao vai executar pq sou a child
 	  	printf("\n");
+  return 0;
 }
-
+*/
 
 
 
