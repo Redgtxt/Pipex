@@ -1,5 +1,72 @@
 #include "pipex.h"
 
+//Simulating the pipe |
+int main(void)
+{
+
+}
+
+/*MORE PIPES
+int main(void)
+{
+  int arr[] = {1, 2, 3, 4, 1, 2,32,79};
+  int arrSize = sizeof(arr) / sizeof(int);
+  int start,end;
+  int fd[2];
+
+  if(pipe(fd) == -1)
+  {
+   	perror("Pipe Eroor");
+    return 1;
+  }
+
+  int child = fork();
+  if(child == -1)
+  {
+    perror("Child eroor");
+    return 1;
+  }
+
+  if(child == 0)
+  {
+    start = 0;
+    end = arrSize / 2;
+  }else{
+    //Começa a metade do array
+    start = arrSize / 2;
+    end = arrSize;
+  }
+  
+  int sum = 0;
+  int i;
+  for(i = start; i < end;i++)
+  {
+    sum+=arr[i];
+  }
+  printf("Calculated partial sum: %d\n",sum);
+
+  if(child == 0)
+  {
+    close(fd[0]);// Nao estou a usar
+    if(write(fd[1],&sum,sizeof(sum)) == -1)
+      perror("Erro write");
+    close(fd[1]); // Ja usei, vamos  fechar
+  }else{
+    int sumFromChild;
+    close(fd[1]);
+    if(read(fd[0],&sumFromChild,sizeof(sumFromChild)) == -1)
+      perror("Erro read");
+    close(fd[0]);
+
+    int totalSum = sum + sumFromChild;
+    wait(NULL);
+    printf("Total sum is: %d\n",totalSum);
+  }
+
+  return 0;
+}
+
+/*
 int main(void)
 {
   int fd[2];
@@ -33,7 +100,7 @@ int main(void)
 }
 
 //!getpid,  gettpid functions
-/*
+
 int main(void)
 {
   int child = fork();
@@ -50,20 +117,7 @@ int main(void)
 
 }
 
-int main(int argc, char *argv[])
-{
-  int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  int fd[2];
 
-  if(pipe(fd) == -1)
-   	perror("Pipe Eroor");
-
-  int child = fork();
-  if(child == -1)
-    perror("Child eroor");
-
-  
-}
 
 int main(void)
 {
