@@ -1,13 +1,135 @@
 #include "pipex.h"
 
-//Simulating the pipe |
+int main(int argc,char *argv[])
+{
+  (void) argv;
+  (void) argc;
+  char *args[2];
+  args[0] = "ls";
+  args[1] = NULL;
+  int pid = fork();
+  if(pid == -1)
+  {
+
+    return 1;
+  }
+
+    if(pid == 0)
+    {
+      //Child
+     int err =  execve("/bin/ls", args, NULL);
+      if(err == -1)
+      {
+        printf("Could not find program to execute\n");
+      }
+    }else{
+      int wstatus;
+      int statusCode;
+      //PArent
+      wait(&wstatus);
+      if(WIFEXITED(wstatus))
+      {
+         statusCode = WEXITSTATUS(wstatus);
+         if(statusCode == 0)
+          printf("Sucesso\n");
+         else
+         printf("Falha");
+      }
+      printf("Some post processing goes here\n");
+    }
+
+    return 0;
+  }
+
+
+/*
+#include <time.h>
+//Two way communication 
 int main(void)
 {
   
+  //5 => 5 * 4 = 20 => 20
+  //
+  int p1[2]; // vai da child para o parent
+  int p2[2]; // vai do parent para a child
+
+  if(pipe(p1) == -1)
+  {
+    perror("Error pipe");
+    return 1;
+  }
+  
+  if(pipe(p2) == -1)
+  {
+    perror("Error pipe");
+    return 1;
+  }
+  int pid = fork();
+  if(pid == -1)
+  {
+    perror("Erro no fork");
+    return 1;
+  }
+
+  //CHILD PROCCES
+  if(pid == 0)
+  {
+    close(p1[0]);
+    close(p2[1]);
+    int x;
+    //Vou ler do file descriptor 0 e armazenar o que estiver la em uma variavel
+    if(read(p2[0],&x,sizeof(x)) == -1)
+    {
+      perror("Erro no read");
+      return 1;
+    }
+    printf("Receiveid %d\n",x);
+    x *= 4;
+   if (write(p1[1],&x,sizeof(x))== -1)
+   {
+    perror("Erro no write");
+    return 1;
+   }
+   printf("Wrote %d\n",x);
+    close(p1[1]);
+    close(p2[0]);
+  }else{
+    close(p1[1]);
+    close(p2[0]);
+  
+    //Parent Process
+    srand(time(NULL));
+    int y = rand() % 10;
+    if(write(p2[1],&y,sizeof(y)) == -1)
+    {
+      perror("Erro no write");
+      return 1;
+    }
+
+   // printf("Wrote %d\n",y);
+    if(read(p1[0],&y,sizeof(y)) == -1)
+    {
+          perror("Erro no write");
+      return 1;
+    }
+    printf("Result is %d\n",y);
+      close(p1[0]);
+    close(p2[1]);
+    wait(NULL);
+  }
   return 0;
 }
 
-/*MORE PIPES
+
+
+
+
+
+
+
+
+
+MORE PIPES
 int main(void)
 {
   int arr[] = {1, 2, 3, 4, 1, 2,32,79};
@@ -67,7 +189,7 @@ int main(void)
   return 0;
 }
 
-/*
+
 int main(void)
 {
   int fd[2];
