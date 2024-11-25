@@ -3,7 +3,8 @@
 //Simulating the pipe |
 int main(void)
 {
-
+  
+  return 0;
 }
 
 /*MORE PIPES
