@@ -1,5 +1,6 @@
 #include "pipex.h"
 
+/*
 int main(int argc,char *argv[])
 {
   (void) argv;
@@ -37,12 +38,8 @@ int main(int argc,char *argv[])
       }
       printf("Some post processing goes here\n");
     }
-
     return 0;
   }
-
-
-/*
 #include <time.h>
 //Two way communication 
 int main(void)
