@@ -1,6 +1,6 @@
 #include "pipex.h"
 
-char *find_path(char *envp[]) 
+char *find_path(char *envp[])
 {
     int i = 0;
 
@@ -13,7 +13,24 @@ char *find_path(char *envp[])
     return (NULL); // Caso PATH não seja encontrado
 }
 
-void execute(char *argv[], char *envp[], int num) 
+void free_error( char **mypaths,char **mycmdargs)
+{
+    int i;
+
+       i = -1;
+    while (mypaths[++i])
+        free(mypaths[i]);
+    free(mypaths);
+
+    i = -1;
+    while (mycmdargs[++i])
+        free(mycmdargs[i]);
+    free(mycmdargs);
+
+    exit(EXIT_FAILURE);
+}
+
+void execute(char *argv[], char *envp[], int num)
 {
     char *PATH_from_env = find_path(envp);
     if (!PATH_from_env)
@@ -34,18 +51,7 @@ void execute(char *argv[], char *envp[], int num)
         }
         free(cmd);
     }
-
-    i = -1;
-    while (mypaths[++i])
-        free(mypaths[i]);
-    free(mypaths);
-
-    i = -1;
-    while (mycmdargs[++i])
-        free(mycmdargs[i]);
-    free(mycmdargs);
-
-    exit(EXIT_FAILURE);
+    free_error(mypaths,mycmdargs);
 }
 
 
