@@ -1,42 +1,51 @@
 #include "pipex.h"
-
+#include "string.h"
 //here_doc
 int main(int argc,char *argv[])
 {
     int is_here_doc = (argc > 1 && ft_strncmp(argv[1],"here_doc",8) == 0);
-if (is_here_doc) 
-{
-    if (argc < 3)
-        handle_error("You need to use a Limiter");
+    if (is_here_doc) 
+    {
+        if (ft_strlen(argv[1]) != 8) 
+            handle_error("here_doc is not well written");
+         
+        if (argc < 3)
+            handle_error("You need to use a Limiter");
 
-    char *limiter = argv[2];
-    int here_doc = open("temp_file", O_CREAT | O_RDWR | O_TRUNC, 0644);
-    if (here_doc == -1)
-        handle_error("Error creating the here_doc");
+        char *limiter = argv[2];
+        int here_doc = open("temp_file", O_CREAT | O_RDWR | O_TRUNC | O_APPEND, 0644);
+        if (here_doc == -1)
+            handle_error("Error creating the here_doc");
 
-    char *line;
-    while (1) {
-        write(1, "heredoc> ", 9);
-        line = get_next_line(0);
+        char *line;
+        while (1) {
+            write(1, "heredoc> ", 9);
+            line = get_next_line(0);
 
-        if (ft_strncmp(line, limiter, ft_strlen(limiter)) == 0 && line[ft_strlen(limiter)] == '\n') {
+            if (ft_strncmp(line, limiter, ft_strlen(limiter)) == 0 && line[ft_strlen(limiter)] == '\n') {
+                free(line);
+                break;
+            }
+
+            write(here_doc, line, ft_strlen(line));
             free(line);
-            break;
         }
-
-        write(here_doc, line, ft_strlen(line));
-        free(line);
+        close(here_doc);
+    } else {
+        // Código normal
+        printf("Vou usar o meu código normal\n");
     }
-
-    close(here_doc);
-} else {
-    // Código normal
-    printf("Vou usar o meu código normal\n");
-}
-
 }
 
 /*
+
+<<: Entrada de texto do terminal redirecionada para o arquivo temporário.
+>>: Acrescentar (append) ao invés de sobrescrever o conteúdo do arquivo.
+
+
+[X] O programa esta a passar se colocar mais um c no here_doc
+[]  Ligar com pipe
+
 Parte 2: Ler a entrada do usuário
 Exiba uma mensagem no terminal pedindo a entrada (heredoc>).---
 Use uma função como get_next_line() ou read() para capturar as linhas digitadas pelo usuário.
