@@ -1,5 +1,5 @@
 NAME = pipex
-SRC = main.c
+SRC = main.c utils_pipex.c
 LIBFTDIR = ./libft
 LIBFT = $(LIBFTDIR)/libft.a
 OBJDIR = ./obj

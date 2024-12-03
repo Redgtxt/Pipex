@@ -1,169 +1,87 @@
 #include "pipex.h"
 
-char *find_path(char *envp[])
+char	*get_command(char **mypaths, char *cmd_arg)
 {
-    int i = 0;
+	int		i;
+	char	*tmp;
+	char	*cmd;
 
-    while (envp[i]) {
-        if (ft_strncmp(envp[i], "PATH=", 5) == 0) {
-            return (envp[i] + 5); // Retorna o valor de PATH sem "PATH="
-        }
-        i++;
-    }
-    return (NULL); // Caso PATH não seja encontrado
+	i = -1;
+	while (mypaths[++i])
+	{
+		tmp = ft_strjoin(mypaths[i], "/");
+		cmd = ft_strjoin(tmp, cmd_arg);
+		free(tmp);
+		if (access(cmd, X_OK) == 0)
+			return (cmd);
+		free(cmd);
+	}
+	return (NULL);
 }
 
-void free_error( char **mypaths,char **mycmdargs)
+void	execute(char *argv[], char *envp[], int num)
 {
-    int i;
+	char	*path_from_env;
+	char	**mypaths;
+	char	**mycmdargs;
+	char	*cmd;
 
-       i = -1;
-    while (mypaths[++i])
-        free(mypaths[i]);
-    free(mypaths);
-
-    i = -1;
-    while (mycmdargs[++i])
-        free(mycmdargs[i]);
-    free(mycmdargs);
-
-    exit(EXIT_FAILURE);
+	path_from_env = find_path(envp);
+	if (!path_from_env)
+		exit(EXIT_FAILURE);
+	mypaths = ft_split(path_from_env, ':');
+	mycmdargs = ft_split(argv[num], ' ');
+	cmd = get_command(mypaths, mycmdargs[0]);
+	if (cmd)
+		execve(cmd, mycmdargs, envp);
+	free_error(mypaths, mycmdargs);
 }
 
-void execute(char *argv[], char *envp[], int num)
+static void	child_process(int end[2], int infile, char *argv[], char *envp[])
 {
-    char *PATH_from_env = find_path(envp);
-    if (!PATH_from_env)
-        exit(EXIT_FAILURE);
-    
-    char **mypaths = ft_split(PATH_from_env, ':');
-    char **mycmdargs = ft_split(argv[num], ' ');
-    int i = -1;
-
-    while (mypaths[++i]) {
-        char *tmp = ft_strjoin(mypaths[i], "/");
-        char *cmd = ft_strjoin(tmp, mycmdargs[0]);
-        free(tmp);
-        if (access(cmd, X_OK) == 0)
-        {
-            execve(cmd, mycmdargs, envp);
-            perror("Execve failed");
-        }
-        free(cmd);
-    }
-    free_error(mypaths,mycmdargs);
+	close(end[0]);
+	dup2(infile, STDIN_FILENO);
+	dup2(end[1], STDOUT_FILENO);
+	close(end[1]);
+	close(infile);
+	execute(argv, envp, 2);
+	exit(EXIT_FAILURE);
 }
 
-
-
-int main(int argc,char *argv[],char *envp[])
+static void	parent_process(int end[2], int outfile, char *argv[], char *envp[])
 {
-
-    //Variaveis
-    int infile;
-    int outfile;
-    int child;
-    int end[2];
-
-    /* Erro Handler */
-    if(argc != 5)
-    {
-        printf("Number of Arguments not valid\n");
-        return -1;
-    }
-    
-    if(access(argv[1],F_OK) == -1)
-    {
-        printf("Vou dar erro porque o infile nao existe\n");
-        return -1;
-    }
-
-    
-    infile = open(argv[1],O_RDONLY);
-    outfile = open(argv[4],O_CREAT | O_RDWR | O_TRUNC, 0644);
-
-
-    /* Erro Handler */
-    if(infile < 0 || outfile < 0) 
-        return -1;
-
-    /* Erro Handler */
-    if(pipe(end) == -1)
-    {
-        printf("Error creating the pipe\n");
-        return -1;
-    }
-    
-    child = fork();
-    /* Erro Handler */
-    if(child == -1)
-    {
-        printf("Error creating the fork\n");
-        return -1;
-    }
-
-
-    if(child == 0)
-    { 
-        //Estou no evento child
-        close(end[0]);
-        //Estou a fazer com que o infile fique com o fd de leitura para que possa lidas os comandos
-        dup2(infile,STDIN_FILENO);
-        //Ao acabarmos de executar o comando CMD1, vamos passar o output dela para o pip usando o dup2
-        dup2(end[1],STDOUT_FILENO);
-        close(end[1]);
-        close(infile);
-        execute(argv,envp,2);
-
-        exit(EXIT_FAILURE);
-    }else
-       { //Estou no evento pai
-        wait(NULL);
-        close(end[1]);
-        //Estou a fazer com que o outfile fique com o fd de escrita para que possa escrever os comandos
-        dup2(outfile,STDOUT_FILENO);
-        //Q
-       dup2(end[0],STDIN_FILENO);
-       
-       close(end[0]);
-       close(outfile);
-        execute(argv,envp,3);
-        exit(EXIT_FAILURE);
-    }
+	wait(NULL);
+	close(end[1]);
+	dup2(outfile, STDOUT_FILENO);
+	dup2(end[0], STDIN_FILENO);
+	close(end[0]);
+	close(outfile);
+	execute(argv, envp, 3);
+	exit(EXIT_FAILURE);
 }
 
+int	main(int argc, char *argv[], char *envp[])
+{
+	int	infile;
+	int	outfile;
+	int	child;
+	int	end[2];
 
-/*
-    TEHNO DE VERIFICAR SE OS CMD1 E CMD2 SAO ARGUMENTOS VALIDOS
-*/
-
-/*
-    execve Arguments
-
-    PATH -- Path do comando: bin/ls
-    ARGS -- Array de argumentos que vao ser executados(tem de terminar no NULL)
-    ENVP -- An array of pointers to null-terminated strings representing the environment variables for the new program. It is also null-terminated. 
-*/
-
-
-/* NOTAS IMPORTANTES
-
-File Descriptor	Constante	Descrição
-0	STDIN_FILENO	Entrada padrão (teclado, por padrão)
-1	STDOUT_FILENO	Saída padrão (tela, por padrão)
-2	STDERR_FILENO	Saída de erro padrão (tela, por padrão)
-
-end[0]: lado de leitura do pipe.
-end[1]: lado de escrita no pipe.
-
-
-O fork() cria dois processos:
-Child (filho): executa cmd1.
-Parent (pai): executa cmd2.
-
-Redireciona a entrada de dados (stdin) para o arquivo infile usando dup2().->   O primeiro comando(cmd 1) precisa receber dados do infile
-                                                                                Dou dup para simular a leitura de um arquivo
-
- Redireciona a saída de cmd1 para o lado de escrita do pipe (end[1]) usando dup2()-> Tenho de enviar o output do comando cmd1 para o cmd2 atraves de um pipe usando o dup2
-
-*/
+	if (argc != 5)
+		handle_error("Number of Arguments not valid\n");
+	if (access(argv[1], F_OK) == -1)
+		handle_error("Infile does not exist\n");
+	infile = open(argv[1], O_RDONLY);
+	outfile = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
+	if (infile < 0 || outfile < 0)
+		handle_error("Error Opening infile or outfile");
+	if (pipe(end) == -1)
+		handle_error("Error creating the pipe\n");
+	child = fork();
+	if (child == -1)
+		handle_error("Error creating the fork\n");
+	if (child == 0)
+		child_process(end, infile, argv, envp);
+	else
+		parent_process(end, outfile, argv, envp);
+}
