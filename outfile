@@ -1,0 +1,15 @@
+Makefile
+estudo.c
+infile
+libft
+main.c
+main_bonus.c
+obj
+outfile
+pipex
+pipex.h
+pipex_bonus
+pipex_bonus.h
+temp_file
+utils_pipex.c
+utils_pipex_bonus.c
