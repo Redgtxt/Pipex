@@ -36,19 +36,6 @@ void create_here_doc(int argc,char *argv)
 int main(int argc,char *argv[],char *envp[])
 {
     int is_here_doc = (argc > 1 && ft_strncmp(argv[1],"here_doc",8) == 0);
-    int infile;
-    int flag;
-
-    flag = 1;
-
-    if(is_here_doc)
-    {
-        
-    }
-
-
-
-
     if (is_here_doc) 
     {
         create_here_doc(argc,argv);
@@ -58,6 +45,7 @@ int main(int argc,char *argv[],char *envp[])
             handle_error("Not enought arguments");
         
         //Variaveis
+        int infile;
         int outfile;
         int num_pipes;
         int child;
