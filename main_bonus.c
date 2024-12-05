@@ -1,11 +1,10 @@
 #include "pipex.h"
 #include "string.h"
 //here_doc
-int main(int argc,char *argv[])
+
+void create_here_doc(int argc,char *argv)
 {
-    int is_here_doc = (argc > 1 && ft_strncmp(argv[1],"here_doc",8) == 0);
-    if (is_here_doc) 
-    {
+    
         if (ft_strlen(argv[1]) != 8) 
             handle_error("here_doc is not well written");
          
@@ -32,39 +31,126 @@ int main(int argc,char *argv[])
             free(line);
         }
         close(here_doc);
+}
+
+int main(int argc,char *argv[],char *envp[])
+{
+    int is_here_doc = (argc > 1 && ft_strncmp(argv[1],"here_doc",8) == 0);
+    int infile;
+    int flag;
+
+    flag = 1;
+
+    if(is_here_doc)
+    {
+        
+    }
+
+
+
+
+    if (is_here_doc) 
+    {
+        create_here_doc(argc,argv);
     } else {
         // Código normal
-        if(argc <= 5)
+        if(argc < 5)
             handle_error("Not enought arguments");
         
         //Variaveis
-        int infile;
         int outfile;
         int num_pipes;
-        num_pipes = argc - 3;
-        int end[2 * (argc - 1)];
+        int child;
+        int num_comandos;
 
+        num_comandos = argc - 3;
+        num_pipes = num_comandos - 1;// -1 para saber numero de pipes
+        int end[2 * num_pipes];
         infile = open(argv[1], O_RDONLY);
 	    if (infile < 0)
 		    handle_error("Error Opening infile");
-	    outfile = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
+	    outfile = open(argv[argc - 1], O_CREAT | O_RDWR | O_TRUNC, 0644);
           if ( outfile < 0)
 		    handle_error("Error Opening outfile");
         
-        //Vou fazer pipe depedendo da minha quantidade de argumentos
+        //Vou criar um loop para criar os pipes
         int i;
         i = 0;
-        while(argc - 1 > i)
+        while (num_pipes > i)
         {
-            if(pipe(end) == -1)
-                handle_error("Eror creating Pipe");
+            if(pipe(end + 2 * i) == -1)
+                handle_error("Eroor Creating Pipes");
             i++;
         }
-        printf("Codigo Rodado ate aqui!!!");
+        
+i = 0; // Índice dos processos
+
+while (num_comandos > i) {
+     child = fork();
+    if (child < 0)
+        handle_error("Error Creating the fork");
+
+    // No processo filho
+    if (child == 0) {
+        // Primeiro comando
+        if (i == 0) {
+            dup2(infile, STDIN_FILENO);          // Redirecionar entrada para o arquivo
+            dup2(end[1], STDOUT_FILENO);        // Redirecionar saída para o pipe
+        } 
+        // Último comando
+        else if (i == num_comandos - 1) {
+            dup2(end[2 * (i - 1)], STDIN_FILENO); // Redirecionar entrada para o último pipe
+            dup2(outfile, STDOUT_FILENO);        // Redirecionar saída para o arquivo de saída
+        } 
+        // Comandos intermediários
+        else {
+            dup2(end[2 * (i - 1)], STDIN_FILENO); // Redirecionar entrada para o pipe anterior
+            dup2(end[2 * i + 1], STDOUT_FILENO); // Redirecionar saída para o próximo pipe
+        }
+       int j;
+        // Fechar todos os extremos dos pipes no processo filho
+        j = 0;
+        while (2 * (num_comandos - 1) > j)
+        {
+        close(end[j]);
+        j++;
+        }
+
+        // Executar o comando usando a função execute
+        execute(argv, envp, 2 + i);
     }
+
+    // No processo pai
+    i++;
+}
+
+// No processo pai: fechar todos os pipes após criar os filhos
+
+int j;
+j = 0;
+while (2 * (num_comandos - 1) > j)
+{
+    close(end[j]);
+   j++;
+}
+
+
+// Aguardar todos os processos filhos
+j = 0;
+while ( num_comandos > j) {
+    waitpid(-1, NULL, 0);
+    j++;
+}
+
+printf("Pipeline executado com sucesso!\n");
+
+}
 }
 
 /*
+
+[]Fazer execute
+[] wait pai
 
 2. Configuração dos Pipes
 Determinar quantos pipes serão necessários:
