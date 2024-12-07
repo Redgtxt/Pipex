@@ -5,6 +5,16 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 
+typedef struct s_pipex {
+	int		infile;
+	int		outfile;
+	int		is_here_doc;
+	int		num_commands;
+	int		num_pipes;
+	int		*pipe_fds;
+}	t_pipex;
+
+
 void handle_error_bonus(const char *message);
 char	*find_path(char *envp[]);
 void	free_error(char **mypaths, char **mycmdargs);
