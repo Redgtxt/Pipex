@@ -1,10 +1,10 @@
 #include "pipex_bonus.h"
 
-int	handle_error(const char *message)
-{
-	ft_printf(message);
-	exit(EXIT_FAILURE);
+void handle_error_bonus(const char *message) {
+    perror(message);
+    exit(EXIT_FAILURE);
 }
+
 
 char	*find_path(char *envp[])
 {

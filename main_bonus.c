@@ -1,39 +1,37 @@
-#include "pipex.h"
-#include "string.h"
+#include "pipex_bonus.h"
 
-void	execute_bonus(char *argv[], char *envp[], int num)
-{
-		char	*path_from_env;
-	char	**mypaths;
-	char	**mycmdargs;
-	char	*cmd;
+void execute_bonus(char *argv[], char *envp[], int num) {
+    char *path_from_env;
+    char **mypaths;
+    char **mycmdargs;
+    char *cmd;
 
-	path_from_env = find_path(envp);
-	if (!path_from_env)
-		exit(EXIT_FAILURE);
-	mypaths = ft_split(path_from_env, ':');
-	mycmdargs = ft_split(argv[num], ' ');
-	cmd = get_command(mypaths, mycmdargs[0]);
+    path_from_env = find_path(envp);
+    if (!path_from_env)
+        handle_error_bonus("Path not found in environment");
 
-     if (access(cmd, X_OK) == -1) {
-        fprintf(stderr, "Error: %s: command not found\n", mycmdargs[0]);
-        exit(EXIT_FAILURE);
+    mypaths = ft_split(path_from_env, ':');
+    mycmdargs = ft_split(argv[num], ' ');
+    cmd = get_command(mypaths, mycmdargs[0]);
+
+    if (!cmd || access(cmd, X_OK) == -1) {
+        handle_error_bonus("Command is not valid");
+        free_error(mypaths, mycmdargs);
     }
 
-
-	if (cmd)
-		  if (execve(cmd, mycmdargs, envp) == -1) {
-        perror("execve"); // Print error message and exit
-        exit(EXIT_FAILURE);
+    if (execve(cmd, mycmdargs, envp) == -1) {
+        handle_error_bonus("execve failed");
+        free_error(mypaths, mycmdargs);
     }
-	free_error(mypaths, mycmdargs);
+
+    free_error(mypaths, mycmdargs);
 }
 
 void create_here_doc(char *argv[]) {
     char *limiter = argv[2];
     int here_doc = open("temp_file", O_CREAT | O_RDWR | O_TRUNC | O_APPEND, 0644);
     if (here_doc == -1)
-        handle_error("Error creating the here_doc");
+        handle_error_bonus("Error creating the here_doc");
 
     char *line;
    while (1) {
@@ -70,7 +68,7 @@ int main(int argc, char *argv[], char *envp[])
 
     // Validar argumentos mínimos
     if ((is_here_doc && argc < 6) || (!is_here_doc && argc < 5))
-        handle_error("Not enough arguments");
+        handle_error_bonus("Not enough arguments");
 
     // Configurar arquivos de entrada e saída
     if (is_here_doc) {
@@ -83,7 +81,7 @@ int main(int argc, char *argv[], char *envp[])
     }
 
     if (infile < 0 || outfile < 0)
-        handle_error("Error opening files");
+        handle_error_bonus("Error opening files");
 
     // Calcular o número de comandos e pipes
     if (is_here_doc)
@@ -94,13 +92,13 @@ int main(int argc, char *argv[], char *envp[])
     num_pipes = num_comandos - 1;
     end = malloc(sizeof(int) * 2 * num_pipes);
     if (!end)
-        handle_error("Error allocating memory for pipes");
+        handle_error_bonus("Error allocating memory for pipes");
 
     // Criar os pipes
     i = 0;
     while (i < num_pipes) {
         if (pipe(end + 2 * i) == -1)
-            handle_error("Error creating pipes");
+            handle_error_bonus("Error creating pipes");
         i++;
     }
 
@@ -114,7 +112,7 @@ int main(int argc, char *argv[], char *envp[])
 
         child = fork();
         if (child < 0)
-            handle_error("Error creating fork");
+            handle_error_bonus("Error creating fork");
 
         if (child == 0) {
             // Primeiro comando
@@ -158,7 +156,7 @@ int main(int argc, char *argv[], char *envp[])
     // Aguardar todos os filhos
     j = 0;
     while (j < num_comandos) {
-        waitpid(-1, NULL, 0);
+        wait(NULL);
         j++;
     }
 
@@ -167,6 +165,5 @@ int main(int argc, char *argv[], char *envp[])
     if (is_here_doc)
         unlink("temp_file");
 
-    printf("Pipeline executed successfully!\n");
     return 0;
 }
