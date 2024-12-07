@@ -10,5 +10,5 @@ char	*find_path(char *envp[]);
 void	free_error(char **mypaths, char **mycmdargs);
 char	*get_command(char **mypaths, char *cmd_arg);
 void	execute(char *argv[], char *envp[], int num);
-
+void	execute_bonus(char *argv[], char *envp[], int num);
 #endif
