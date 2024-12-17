@@ -1,7 +1,7 @@
 NAME = pipex
 NAME_BONUS = pipex_bonus
 SRC = main.c utils_pipex.c
-SRC_BONUS = main_bonus.c utils_pipex_bonus.c
+SRC_BONUS = main_bonus.c utils_pipex_bonus.c comand_setup_bonus.c here_doc_bonus.c
 LIBFTDIR = ./libft
 LIBFT = $(LIBFTDIR)/libft.a
 OBJDIR = ./obj

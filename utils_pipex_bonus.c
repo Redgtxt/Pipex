@@ -1,6 +1,7 @@
 #include "pipex_bonus.h"
 
-void handle_error_bonus(const char *message) {
+void handle_error_bonus(const char *message)
+{
     perror(message);
     exit(EXIT_FAILURE);
 }
@@ -22,20 +23,25 @@ char	*find_path(char *envp[])
 	return (NULL);
 }
 
-void	free_error(char **mypaths, char **mycmdargs)
+static void	free_str_array(char **arr)
 {
 	int	i;
 
-	i = -1;
-	while (mypaths[++i])
-		free(mypaths[i]);
-	free(mypaths);
-	i = -1;
-	while (mycmdargs[++i])
-		free(mycmdargs[i]);
-	free(mycmdargs);
-	exit(EXIT_FAILURE);
+	i = 0;
+	while (arr[i] != NULL)
+	{
+		free(arr[i]);
+		i++;
+	}
+	free(arr);
 }
+
+void	free_split_arrays(char **mypaths, char **mycmdargs)
+{
+	free_str_array(mypaths);
+	free_str_array(mycmdargs);
+}
+
 char	*get_command(char **mypaths, char *cmd_arg)
 {
 	int		i;
@@ -55,20 +61,3 @@ char	*get_command(char **mypaths, char *cmd_arg)
 	return (NULL);
 }
 
-void	execute(char *argv[], char *envp[], int num)
-{
-	char	*path_from_env;
-	char	**mypaths;
-	char	**mycmdargs;
-	char	*cmd;
-
-	path_from_env = find_path(envp);
-	if (!path_from_env)
-		exit(EXIT_FAILURE);
-	mypaths = ft_split(path_from_env, ':');
-	mycmdargs = ft_split(argv[num], ' ');
-	cmd = get_command(mypaths, mycmdargs[0]);
-	if (cmd)
-		execve(cmd, mycmdargs, envp);
-	free_error(mypaths, mycmdargs);
-}
