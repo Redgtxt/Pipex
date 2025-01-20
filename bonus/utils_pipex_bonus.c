@@ -2,7 +2,8 @@
 
 void handle_error_bonus(const char *message)
 {
-    perror(message);
+    ft_putstr_fd((char *)message, STDERR_FILENO);
+    ft_putstr_fd((char *)"\n", STDERR_FILENO);
     exit(EXIT_FAILURE);
 }
 
